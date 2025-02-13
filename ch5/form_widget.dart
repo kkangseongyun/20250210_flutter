@@ -73,7 +73,7 @@ class FormWidgetState extends State<FormWidget>{
                 //Form 하위의 모든 filed validator 에 등록한 함수가 호출된다..
                 //모두 null 을 리턴하면 전체 유효, true... 하나라도 null  이 아니면 전체 invalid, false
                 if(form?.validate() ?? false){
-                  form?.save();//Form 하위의 모든 field 의 onSave 함수 호출..
+                  form?.save();//Form 하위의 모든 field 의 onSaved 함수 호출..
                   save();
                 }
               },
