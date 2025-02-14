@@ -73,7 +73,20 @@ Future<List<Article>> getServerData(String page) async {
 }
 
 class FutureWidget extends StatelessWidget {
-
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: getServerData('1'),
+        builder: (context, snapshot){
+          if(snapshot.hasData){
+            return getWidget(snapshot.data ?? []);
+          }else if(snapshot.hasError){
+            return Text('${snapshot.error}');
+          }
+          return CircularProgressIndicator();
+        },
+    );
+  }
 
 }
 
@@ -85,7 +98,48 @@ class StreamWidget extends StatefulWidget {
 
 class StreamState extends State<StreamWidget> {
   List<Article> list = [];
+  //여러 stream 을 통합하기 편하고..
+  //stream 이 아닌 일반 데이터를 stream 으로 처리하기도 편하고..
+  //listener 를 여러개 두어서 broadcast 개념으로.. 이용하게 하기도 편하고..
+  StreamController<List<Article>> streamController = StreamController();
 
+  void getData(int i) async {
+    int page = ++i;
+    await getServerData(page.toString())
+    .then((data){
+      streamController.add(data);
+    });
+  }
+
+  peridicSream() async {
+    Duration duration = Duration(seconds: 5);
+    Stream stream = Stream.periodic(duration, getData);
+    stream = stream.take(5);
+    stream.listen((event){
+      print('서버 요청');
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    peridicSream();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+        stream: streamController.stream,
+        builder: (context, AsyncSnapshot snapshot){
+          if(snapshot.hasData){
+            list.addAll(snapshot.data);
+            return getWidget(list);
+          }else if(snapshot.hasError){
+            return Text('${snapshot.error}');
+          }
+          return CircularProgressIndicator();
+        },
+    );
+  }
 
 }
 
